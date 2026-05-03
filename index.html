@@ -1,0 +1,493 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>어린이집 알림장 생성기</title>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/docx/8.5.0/docx.umd.min.js"></script>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      font-family: 'Malgun Gothic', '맑은 고딕', sans-serif;
+      background: #f5f7f5;
+      color: #2c2c2a;
+      min-height: 100vh;
+      padding: 1.5rem 1rem;
+    }
+
+    .container {
+      max-width: 680px;
+      margin: 0 auto;
+    }
+
+    .app-title {
+      font-size: 22px;
+      font-weight: 700;
+      color: #1D9E75;
+      margin-bottom: 4px;
+      text-align: center;
+    }
+
+    .app-sub {
+      font-size: 13px;
+      color: #888780;
+      margin-bottom: 1.5rem;
+      text-align: center;
+    }
+
+    .section {
+      background: #fff;
+      border: 1px solid #e0e0dc;
+      border-radius: 14px;
+      padding: 1rem 1.25rem;
+      margin-bottom: 12px;
+    }
+
+    .section-title {
+      font-size: 13px;
+      font-weight: 600;
+      color: #5F5E5A;
+      margin-bottom: 10px;
+    }
+
+    .mode-toggle {
+      display: flex;
+      gap: 6px;
+      margin-bottom: 14px;
+      flex-wrap: wrap;
+    }
+
+    .mode-btn {
+      flex: 1;
+      min-width: 100px;
+      padding: 8px 6px;
+      border: 1px solid #ccc;
+      border-radius: 8px;
+      background: #fff;
+      color: #888;
+      font-size: 12px;
+      cursor: pointer;
+      transition: all 0.15s;
+      text-align: center;
+      font-family: inherit;
+    }
+
+    .mode-btn.active-outdoor { background: #EAF3DE; border-color: #97C459; color: #3B6D11; font-weight: 600; }
+    .mode-btn.active-indoor  { background: #E6F1FB; border-color: #85B7EB; color: #185FA5; font-weight: 600; }
+    .mode-btn.active-both    { background: #FAEEDA; border-color: #EF9F27; color: #854F0B; font-weight: 600; }
+
+    .activity-block {
+      border-radius: 8px;
+      padding: 10px 12px;
+      margin-bottom: 10px;
+    }
+
+    .outdoor-block { background: #EAF3DE; border: 1px solid #97C459; }
+    .indoor-block  { background: #E6F1FB; border: 1px solid #85B7EB; }
+
+    .block-label { font-size: 12px; font-weight: 600; margin-bottom: 8px; }
+    .outdoor-block .block-label { color: #3B6D11; }
+    .indoor-block  .block-label { color: #185FA5; }
+
+    .loc-row { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+    .field-group { display: flex; flex-direction: column; gap: 4px; }
+    .field-label { font-size: 12px; color: #888; }
+
+    input[type="text"], textarea {
+      width: 100%;
+      font-size: 13px;
+      font-family: inherit;
+      border-radius: 8px;
+      border: 1px solid #ddd;
+      padding: 8px 10px;
+      color: #2c2c2a;
+      background: #f9f9f7;
+      line-height: 1.5;
+    }
+
+    input[type="text"]:focus, textarea:focus {
+      outline: none;
+      border-color: #1D9E75;
+    }
+
+    input[type="text"]::placeholder,
+    textarea::placeholder { color: #bbb; }
+
+    textarea { resize: none; }
+
+    .child-row { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-bottom: 12px; }
+    .category-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+
+    .generate-btn {
+      width: 100%;
+      padding: 13px;
+      border-radius: 10px;
+      border: none;
+      background: #1D9E75;
+      color: white;
+      font-size: 15px;
+      font-weight: 700;
+      cursor: pointer;
+      margin-top: 4px;
+      font-family: inherit;
+      transition: opacity 0.15s;
+    }
+
+    .generate-btn:hover { opacity: 0.88; }
+    .generate-btn:disabled { opacity: 0.5; cursor: not-allowed; }
+
+    .result-tabs {
+      display: flex;
+      margin-top: 14px;
+      border-radius: 10px 10px 0 0;
+      overflow: hidden;
+      border: 1px solid #ddd;
+      border-bottom: none;
+    }
+
+    .tab-btn {
+      flex: 1;
+      padding: 10px;
+      font-size: 13px;
+      font-weight: 600;
+      cursor: pointer;
+      border: none;
+      background: #f0f0ee;
+      color: #888;
+      font-family: inherit;
+      transition: all 0.15s;
+    }
+
+    .tab-btn.active { background: #fff; color: #2c2c2a; }
+    .tab-btn:first-child { border-right: 1px solid #ddd; }
+
+    .result-box {
+      background: #fff;
+      border: 1px solid #ddd;
+      border-radius: 0 0 12px 12px;
+      padding: 1.25rem;
+      white-space: pre-wrap;
+      font-size: 14px;
+      line-height: 1.9;
+      color: #2c2c2a;
+      min-height: 100px;
+    }
+
+    .result-box.short-mode {
+      background: #FFF5F8;
+      border-color: #ED93B1;
+      font-size: 15px;
+    }
+
+    .char-count {
+      font-size: 12px;
+      color: #aaa;
+      text-align: right;
+      margin-top: 4px;
+    }
+
+    .btn-row {
+      display: flex;
+      gap: 8px;
+      margin-top: 8px;
+    }
+
+    .action-btn {
+      flex: 1;
+      padding: 10px;
+      border-radius: 8px;
+      border: 1px solid #ddd;
+      background: #fff;
+      color: #555;
+      font-size: 13px;
+      font-weight: 600;
+      cursor: pointer;
+      font-family: inherit;
+    }
+
+    .action-btn:hover { background: #f5f5f3; }
+
+    .download-btn {
+      background: #E6F1FB;
+      border-color: #85B7EB;
+      color: #185FA5;
+    }
+
+    .download-btn:hover { background: #cce0f5; }
+
+    @media (max-width: 500px) {
+      .category-grid, .loc-row, .child-row { grid-template-columns: 1fr; }
+    }
+  </style>
+</head>
+<body>
+<div class="container">
+  <p class="app-title">🌸 어린이집 알림장 생성기</p>
+  <p class="app-sub">키워드를 입력하면 AI가 알림장을 자동으로 작성해드려요</p>
+
+  <div class="section">
+    <p class="section-title">아이 정보</p>
+    <div class="child-row">
+      <div class="field-group">
+        <span class="field-label">아이 이름</span>
+        <input type="text" id="childName" placeholder="예) 혜경" />
+      </div>
+      <div class="field-group">
+        <span class="field-label">반 이름</span>
+        <input type="text" id="className" placeholder="예) 하늘반" />
+      </div>
+    </div>
+  </div>
+
+  <div class="section">
+    <p class="section-title">활동 유형 선택</p>
+    <div class="mode-toggle">
+      <button class="mode-btn active-outdoor" id="btn-outdoor" onclick="setMode('outdoor')">🌿 야외활동만</button>
+      <button class="mode-btn" id="btn-indoor" onclick="setMode('indoor')">🏠 실내활동만</button>
+      <button class="mode-btn" id="btn-both" onclick="setMode('both')">🌿+🏠 야외+실내</button>
+    </div>
+
+    <div id="outdoor-block" class="activity-block outdoor-block">
+      <p class="block-label">🌿 야외활동</p>
+      <div class="loc-row">
+        <div class="field-group">
+          <span class="field-label">목적지 / 장소</span>
+          <input type="text" id="destination" placeholder="예) 뒷산 숲, 공원" />
+        </div>
+        <div class="field-group">
+          <span class="field-label">체험학습 장소</span>
+          <input type="text" id="experiencePlace" placeholder="예) 농장, 박물관" />
+        </div>
+      </div>
+    </div>
+
+    <div id="indoor-block" class="activity-block indoor-block" style="display:none;">
+      <p class="block-label">🏠 실내활동</p>
+      <div class="field-group">
+        <span class="field-label">실내활동 내용 (선택)</span>
+        <input type="text" id="indoorDesc" placeholder="예) 오후 실내수업, 영어수업, 미술활동" />
+      </div>
+    </div>
+  </div>
+
+  <div class="section">
+    <p class="section-title">소주제별 키워드 입력</p>
+    <div class="category-grid">
+      <div class="field-group">
+        <span class="field-label">💬 언어/말하기 발달</span>
+        <textarea id="cat1" rows="2" placeholder="예) 고추?, 다람쥐 찾아볼까"></textarea>
+      </div>
+      <div class="field-group">
+        <span class="field-label">🎮 활동과 놀이</span>
+        <textarea id="cat2" rows="2" placeholder="예) 고추모종심기, 높은곳 도전"></textarea>
+      </div>
+      <div class="field-group">
+        <span class="field-label">🍱 식사</span>
+        <textarea id="cat3" rows="2" placeholder="예) 잘먹음, 편식없음"></textarea>
+      </div>
+      <div class="field-group">
+        <span class="field-label">🤝 사회성/발달</span>
+        <textarea id="cat4" rows="2" placeholder="예) 친구와 잘어울림, 장화 투정"></textarea>
+      </div>
+      <div class="field-group">
+        <span class="field-label">📋 내일 준비물</span>
+        <textarea id="cat5" rows="2" placeholder="예) 여벌옷, 물통, 돗자리"></textarea>
+      </div>
+      <div class="field-group">
+        <span class="field-label">📢 공지사항</span>
+        <textarea id="cat6" rows="2" placeholder="예) 4월 교재 전달, 연휴 안내"></textarea>
+      </div>
+    </div>
+  </div>
+
+  <button class="generate-btn" id="genBtn" onclick="generateNote()">✨ 알림장 자동 생성하기</button>
+
+  <div id="resultArea" style="display:none;">
+    <div class="result-tabs">
+      <button class="tab-btn active" id="tab-full" onclick="switchTab('full')">📝 전체 알림장</button>
+      <button class="tab-btn" id="tab-short" onclick="switchTab('short')">✨ 200자 요약</button>
+    </div>
+    <div class="result-box" id="resultText"></div>
+    <p class="char-count" id="charCount"></p>
+    <div class="btn-row">
+      <button class="action-btn" onclick="copyResult()">복사하기</button>
+      <button class="action-btn download-btn" onclick="downloadWord()">📄 워드 다운로드</button>
+    </div>
+  </div>
+</div>
+
+<script>
+  let currentMode = 'outdoor';
+  let fullText = '';
+  let shortText = '';
+  let currentTab = 'full';
+
+  const API_KEY = 'YOUR_ANTHROPIC_API_KEY'; // ← 여기에 API 키 입력
+
+  function setMode(mode) {
+    currentMode = mode;
+    document.getElementById('btn-outdoor').className = 'mode-btn' + (mode === 'outdoor' ? ' active-outdoor' : '');
+    document.getElementById('btn-indoor').className  = 'mode-btn' + (mode === 'indoor'  ? ' active-indoor'  : '');
+    document.getElementById('btn-both').className    = 'mode-btn' + (mode === 'both'    ? ' active-both'    : '');
+    document.getElementById('outdoor-block').style.display = (mode === 'outdoor' || mode === 'both') ? 'block' : 'none';
+    document.getElementById('indoor-block').style.display  = (mode === 'indoor'  || mode === 'both') ? 'block' : 'none';
+  }
+
+  function switchTab(tab) {
+    currentTab = tab;
+    document.getElementById('tab-full').className  = 'tab-btn' + (tab === 'full'  ? ' active' : '');
+    document.getElementById('tab-short').className = 'tab-btn' + (tab === 'short' ? ' active' : '');
+    const box = document.getElementById('resultText');
+    if (tab === 'full') {
+      box.className = 'result-box';
+      box.textContent = fullText || '아직 전체 알림장이 없어요!';
+      document.getElementById('charCount').textContent = fullText ? `총 ${fullText.length}자` : '';
+    } else {
+      box.className = 'result-box short-mode';
+      box.textContent = shortText || '아직 200자 요약이 없어요!';
+      document.getElementById('charCount').textContent = shortText ? `총 ${shortText.length}자` : '';
+    }
+  }
+
+  async function callClaude(prompt, maxTokens) {
+    const res = await fetch('https://api.anthropic.com/v1/messages', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        model: 'claude-sonnet-4-20250514',
+        max_tokens: maxTokens,
+        messages: [{ role: 'user', content: prompt }]
+      })
+    });
+    const data = await res.json();
+    return data.content.map(i => i.text || '').join('\n');
+  }
+
+  async function generateNote() {
+    const childName       = document.getElementById('childName').value.trim() || '아이';
+    const className       = document.getElementById('className').value.trim();
+    const destination     = document.getElementById('destination').value.trim();
+    const experiencePlace = document.getElementById('experiencePlace').value.trim();
+    const indoorDesc      = document.getElementById('indoorDesc').value.trim();
+    const cat1 = document.getElementById('cat1').value.trim();
+    const cat2 = document.getElementById('cat2').value.trim();
+    const cat3 = document.getElementById('cat3').value.trim();
+    const cat4 = document.getElementById('cat4').value.trim();
+    const cat5 = document.getElementById('cat5').value.trim();
+    const cat6 = document.getElementById('cat6').value.trim();
+
+    if (!cat1 && !cat2 && !cat3 && !cat4 && !cat5 && !cat6) {
+      alert('최소 하나의 키워드를 입력해주세요!'); return;
+    }
+
+    const btn = document.getElementById('genBtn');
+    btn.disabled = true; btn.textContent = '작성 중...';
+    document.getElementById('resultArea').style.display = 'block';
+    document.getElementById('resultText').className = 'result-box';
+    document.getElementById('resultText').textContent = '알림장을 작성하고 있어요...';
+    document.getElementById('charCount').textContent = '';
+    document.getElementById('tab-full').className  = 'tab-btn active';
+    document.getElementById('tab-short').className = 'tab-btn';
+    currentTab = 'full';
+
+    let activityInfo = '';
+    if (currentMode === 'outdoor') {
+      activityInfo = `활동 유형: 야외활동\n${destination ? '목적지: ' + destination + '\n' : ''}${experiencePlace ? '체험학습 장소: ' + experiencePlace + '\n' : ''}`;
+    } else if (currentMode === 'indoor') {
+      activityInfo = `활동 유형: 실내활동\n${indoorDesc ? '실내활동 내용: ' + indoorDesc + '\n' : ''}`;
+    } else {
+      activityInfo = `활동 유형: 야외활동 + 실내활동 (오전 야외, 오후 실내)\n${destination ? '야외 목적지: ' + destination + '\n' : ''}${experiencePlace ? '체험학습 장소: ' + experiencePlace + '\n' : ''}${indoorDesc ? '실내활동 내용: ' + indoorDesc + '\n' : ''}`;
+    }
+
+    const keywords = `${cat1 ? '언어/말하기 발달: ' + cat1 + '\n' : ''}${cat2 ? '활동과 놀이: ' + cat2 + '\n' : ''}${cat3 ? '식사: ' + cat3 + '\n' : ''}${cat4 ? '사회성/발달: ' + cat4 + '\n' : ''}${cat5 ? '내일 준비물: ' + cat5 + '\n' : ''}${cat6 ? '공지사항: ' + cat6 + '\n' : ''}`;
+
+    const fullPrompt = `당신은 어린이집 선생님입니다. 아래 키워드를 바탕으로 따뜻하고 사랑스러운 어린이집 알림장을 작성해주세요.
+아이 이름: ${childName}
+${className ? '반 이름: ' + className : ''}
+${activityInfo}
+[소주제별 키워드]
+${keywords}
+작성 규칙:
+- 입력된 키워드가 있는 소주제만 포함하고 소주제 구분 없이 쭉 이어서 자연스럽게 작성하세요
+- 야외+실내 동시인 경우 오전 야외활동 → 오후 실내활동 흐름으로 연결해주세요
+- 따뜻하고 친근한 말투로 부모님께 아이의 하루를 생생하게 전달해주세요
+- 아이 이름을 자연스럽게 넣어주세요
+- 이모지를 중간중간 적절히 넣어 읽기 편하게 해주세요
+- 인사말로 시작하고 마무리 인사로 끝내주세요`;
+
+    const shortPrompt = `당신은 어린이집 선생님입니다. 아래 키워드를 바탕으로 귀엽고 따뜻한 200자 이내의 짧은 알림장을 작성해주세요.
+아이 이름: ${childName}
+${activityInfo}
+[키워드]
+${keywords}
+작성 규칙:
+- 반드시 200자 이내로 작성하세요
+- 핵심 내용만 귀엽고 따뜻하게 담아주세요
+- 이모지 2~3개 사용해주세요
+- 아이 이름 한 번 자연스럽게 넣어주세요
+- 카카오톡 메시지처럼 친근하고 짧게 써주세요
+- 인사말 없이 바로 내용으로 시작해주세요`;
+
+    try {
+      const [full, short] = await Promise.all([
+        callClaude(fullPrompt, 1200),
+        callClaude(shortPrompt, 400)
+      ]);
+      fullText = full; shortText = short;
+      document.getElementById('resultText').textContent = fullText;
+      document.getElementById('charCount').textContent = `총 ${fullText.length}자`;
+    } catch (e) {
+      document.getElementById('resultText').textContent = '앗, 오류가 발생했어요. 다시 시도해주세요!';
+      fullText = ''; shortText = '';
+    }
+
+    btn.disabled = false; btn.textContent = '✨ 알림장 자동 생성하기';
+  }
+
+  function copyResult() {
+    const text = currentTab === 'full' ? fullText : shortText;
+    if (!text) return;
+    navigator.clipboard.writeText(text).then(() => {
+      const btn = document.querySelectorAll('.action-btn')[0];
+      btn.textContent = '복사됐어요!';
+      setTimeout(() => { btn.textContent = '복사하기'; }, 1500);
+    });
+  }
+
+  async function downloadWord() {
+    const text = currentTab === 'full' ? fullText : shortText;
+    if (!text) return;
+    const childName = document.getElementById('childName').value.trim() || '아이';
+    const className = document.getElementById('className').value.trim();
+    const today = new Date().toLocaleDateString('ko-KR', { year: 'numeric', month: 'long', day: 'numeric' });
+    const { Document, Packer, Paragraph, TextRun, AlignmentType, BorderStyle } = docx;
+    const lines = text.split('\n').filter(l => l.trim() !== '');
+    const label = currentTab === 'short' ? ' (200자 요약)' : '';
+    const children = [
+      new Paragraph({ alignment: AlignmentType.CENTER, spacing: { before: 0, after: 120 },
+        children: [new TextRun({ text: '🌸 어린이집 알림장' + label + ' 🌸', bold: true, size: 40, font: 'Malgun Gothic', color: '1D9E75' })] }),
+      new Paragraph({ alignment: AlignmentType.CENTER, spacing: { before: 0, after: 80 },
+        children: [new TextRun({ text: `${className ? className + '  ·  ' : ''}${childName}  ·  ${today}`, size: 20, font: 'Malgun Gothic', color: '888780' })] }),
+      new Paragraph({ border: { bottom: { style: BorderStyle.SINGLE, size: 8, color: '1D9E75', space: 1 } },
+        spacing: { before: 0, after: 360 }, children: [new TextRun({ text: '' })] }),
+      ...lines.map(line => new Paragraph({ spacing: { before: 0, after: 180 },
+        children: [new TextRun({ text: line, size: 23, font: 'Malgun Gothic', color: '2C2C2A' })] })),
+      new Paragraph({ border: { bottom: { style: BorderStyle.SINGLE, size: 4, color: 'D3D1C7', space: 1 } },
+        spacing: { before: 280, after: 200 }, children: [new TextRun({ text: '' })] }),
+      new Paragraph({ alignment: AlignmentType.CENTER,
+        children: [new TextRun({ text: `💛 항상 사랑과 관심으로 ${childName}이를 돌봐주셔서 감사합니다 💛`, size: 20, font: 'Malgun Gothic', color: '888780' })] })
+    ];
+    const doc2 = new Document({ sections: [{ properties: { page: { size: { width: 11906, height: 16838 }, margin: { top: 1300, right: 1300, bottom: 1300, left: 1300 } } }, children }] });
+    const buffer = await Packer.toBuffer(doc2);
+    const blob = new Blob([buffer], { type: 'application/vnd.openxmlformats-officedocument.wordprocessingml.document' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `알림장_${childName}_${today}${currentTab === 'short' ? '_요약' : ''}.docx`;
+    a.click();
+    URL.revokeObjectURL(url);
+  }
+</script>
+</body>
+</html>
