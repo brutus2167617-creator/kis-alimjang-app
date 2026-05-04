@@ -210,8 +210,8 @@ async function generate(){
   else actInfo=`야외+실내. 야외목적지:${dest||'없음'}. 체험학습장소:${exp||'없음'}. 체험학습내용:${expContent||'없음'}. 실내활동:${inDesc||'없음'}`;
   const prepFinal=[common.prep,todayPrep].filter(Boolean).join(', ')||'없음';const noticeFinal=[common.notice,todayNotice].filter(Boolean).join(' / ')||'없음';const closing=common.closing||'좋은 하루 보내세요!';
   const kw=`${cat1?'언어:'+cat1+'. ':''}${cat2?'활동:'+cat2+'. ':''}${cat3?'식사:'+cat3+'. ':''}${cat4?'사회성:'+cat4+'. ':''}${cat5?'건강/약복용:'+cat5+'. ':''}${cat6?'특징적인일:'+cat6+'. ':''}`;
-  const fullPrompt=`어린이집 선생님으로서 따뜻하고 사랑스러운 알림장을 작성해주세요.\n${kidInfo}\n활동유형:${actInfo}\n키워드:${kw}\n준비물:${prepFinal}\n공지사항:${noticeFinal}\n마무리인사:${closing}\n규칙: 소주제 구분없이 하나의 글처럼 자연스럽게. 아이 특징 반영. 이모지 중간중간. 인사말로 시작. 건강/약복용 있으면 포함. 특징적인 일 생생하게. 준비물과 공지사항 마지막에. 마무리인사로 끝내기.`;
-  const shortPrompt=`어린이집 선생님으로서 200자 이내의 귀엽고 따뜻한 알림장을 작성해주세요.\n${kidInfo}\n활동:${actInfo}\n키워드:${kw}\n규칙:200자 이내. 이모지 2~3개. 카카오톡처럼 친근하게. 바로 내용 시작.`;
+  const fullPrompt=`어린이집 선생님으로서 따뜻하고 사랑스러운 알림장을 작성해주세요.\n${kidInfo}\n활동유형:${actInfo}\n키워드:${kw}\n준비물:${prepFinal}\n공지사항:${noticeFinal}\n마무리인사:${closing}\n규칙: 아이의 행동을 묘사할 때는 절대 존칭(드셨어요, 하셨어요, 먹으셨어요 등)을 사용하지 말것. 아이 행동은 평어체로(먹었어요, 했어요, 놀았어요) 표현할것. 부모님께 전달하는 말투는 정중하게, 아이 행동 묘사는 평어체로 작성할것.소주제 구분없이 하나의 글처럼 자연스럽게. 아이 특징 반영. 이모지 중간중간. 인사말로 시작. 건강/약복용 있으면 포함. 특징적인 일 생생하게. 준비물과 공지사항 마지막에. 마무리인사로 끝내기.`;
+  const shortPrompt=`어린이집 선생님으로서 200자 이내의 귀엽고 따뜻한 알림장을 작성해주세요.\n${kidInfo}\n활동:${actInfo}\n키워드:${kw}\n규칙:아이의 행동을 묘사할 때는 절대 존칭(드셨어요, 하셨어요, 먹으셨어요 등)을 사용하지 말것. 아이 행동은 평어체로(먹었어요, 했어요, 놀았어요) 표현할것. 부모님께 전달하는 말투는 정중하게, 아이 행동 묘사는 평어체로 작성할것.200자 이내. 이모지 2~3개. 카카오톡처럼 친근하게. 바로 내용 시작.`;
   try{const [f,s]=await Promise.all([callAPI(fullPrompt,1200),callAPI(shortPrompt,400)]);fullText=f;shortText=s;document.getElementById('resultText').textContent=fullText;document.getElementById('charCount').textContent=`총 ${fullText.length}자`;}
   catch(e){document.getElementById('resultText').textContent='오류가 발생했어요 😥\n'+e.message;fullText='';shortText='';}
   btn.disabled=false;btn.textContent='✨ 알림장 자동 생성하기';
