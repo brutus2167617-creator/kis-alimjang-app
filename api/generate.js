@@ -25,7 +25,7 @@ export default async function handler(req, res) {
       'Content-Type': 'application/json',
       'x-api-key': apiKey,
       'anthropic-version': '2023-06-01',
-      'Content-Length': Buffer.byteLength(body)
+      'Content-Length': Buffer.byteLength(body, 'utf8')
     }
   };
 
