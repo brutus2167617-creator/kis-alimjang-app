@@ -1,493 +1,224 @@
 <!DOCTYPE html>
 <html lang="ko">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>어린이집 알림장 생성기</title>
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/docx/8.5.0/docx.umd.min.js"></script>
-  <style>
-    * { box-sizing: border-box; margin: 0; padding: 0; }
-
-    body {
-      font-family: 'Malgun Gothic', '맑은 고딕', sans-serif;
-      background: #f5f7f5;
-      color: #2c2c2a;
-      min-height: 100vh;
-      padding: 1.5rem 1rem;
-    }
-
-    .container {
-      max-width: 680px;
-      margin: 0 auto;
-    }
-
-    .app-title {
-      font-size: 22px;
-      font-weight: 700;
-      color: #1D9E75;
-      margin-bottom: 4px;
-      text-align: center;
-    }
-
-    .app-sub {
-      font-size: 13px;
-      color: #888780;
-      margin-bottom: 1.5rem;
-      text-align: center;
-    }
-
-    .section {
-      background: #fff;
-      border: 1px solid #e0e0dc;
-      border-radius: 14px;
-      padding: 1rem 1.25rem;
-      margin-bottom: 12px;
-    }
-
-    .section-title {
-      font-size: 13px;
-      font-weight: 600;
-      color: #5F5E5A;
-      margin-bottom: 10px;
-    }
-
-    .mode-toggle {
-      display: flex;
-      gap: 6px;
-      margin-bottom: 14px;
-      flex-wrap: wrap;
-    }
-
-    .mode-btn {
-      flex: 1;
-      min-width: 100px;
-      padding: 8px 6px;
-      border: 1px solid #ccc;
-      border-radius: 8px;
-      background: #fff;
-      color: #888;
-      font-size: 12px;
-      cursor: pointer;
-      transition: all 0.15s;
-      text-align: center;
-      font-family: inherit;
-    }
-
-    .mode-btn.active-outdoor { background: #EAF3DE; border-color: #97C459; color: #3B6D11; font-weight: 600; }
-    .mode-btn.active-indoor  { background: #E6F1FB; border-color: #85B7EB; color: #185FA5; font-weight: 600; }
-    .mode-btn.active-both    { background: #FAEEDA; border-color: #EF9F27; color: #854F0B; font-weight: 600; }
-
-    .activity-block {
-      border-radius: 8px;
-      padding: 10px 12px;
-      margin-bottom: 10px;
-    }
-
-    .outdoor-block { background: #EAF3DE; border: 1px solid #97C459; }
-    .indoor-block  { background: #E6F1FB; border: 1px solid #85B7EB; }
-
-    .block-label { font-size: 12px; font-weight: 600; margin-bottom: 8px; }
-    .outdoor-block .block-label { color: #3B6D11; }
-    .indoor-block  .block-label { color: #185FA5; }
-
-    .loc-row { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
-    .field-group { display: flex; flex-direction: column; gap: 4px; }
-    .field-label { font-size: 12px; color: #888; }
-
-    input[type="text"], textarea {
-      width: 100%;
-      font-size: 13px;
-      font-family: inherit;
-      border-radius: 8px;
-      border: 1px solid #ddd;
-      padding: 8px 10px;
-      color: #2c2c2a;
-      background: #f9f9f7;
-      line-height: 1.5;
-    }
-
-    input[type="text"]:focus, textarea:focus {
-      outline: none;
-      border-color: #1D9E75;
-    }
-
-    input[type="text"]::placeholder,
-    textarea::placeholder { color: #bbb; }
-
-    textarea { resize: none; }
-
-    .child-row { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-bottom: 12px; }
-    .category-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
-
-    .generate-btn {
-      width: 100%;
-      padding: 13px;
-      border-radius: 10px;
-      border: none;
-      background: #1D9E75;
-      color: white;
-      font-size: 15px;
-      font-weight: 700;
-      cursor: pointer;
-      margin-top: 4px;
-      font-family: inherit;
-      transition: opacity 0.15s;
-    }
-
-    .generate-btn:hover { opacity: 0.88; }
-    .generate-btn:disabled { opacity: 0.5; cursor: not-allowed; }
-
-    .result-tabs {
-      display: flex;
-      margin-top: 14px;
-      border-radius: 10px 10px 0 0;
-      overflow: hidden;
-      border: 1px solid #ddd;
-      border-bottom: none;
-    }
-
-    .tab-btn {
-      flex: 1;
-      padding: 10px;
-      font-size: 13px;
-      font-weight: 600;
-      cursor: pointer;
-      border: none;
-      background: #f0f0ee;
-      color: #888;
-      font-family: inherit;
-      transition: all 0.15s;
-    }
-
-    .tab-btn.active { background: #fff; color: #2c2c2a; }
-    .tab-btn:first-child { border-right: 1px solid #ddd; }
-
-    .result-box {
-      background: #fff;
-      border: 1px solid #ddd;
-      border-radius: 0 0 12px 12px;
-      padding: 1.25rem;
-      white-space: pre-wrap;
-      font-size: 14px;
-      line-height: 1.9;
-      color: #2c2c2a;
-      min-height: 100px;
-    }
-
-    .result-box.short-mode {
-      background: #FFF5F8;
-      border-color: #ED93B1;
-      font-size: 15px;
-    }
-
-    .char-count {
-      font-size: 12px;
-      color: #aaa;
-      text-align: right;
-      margin-top: 4px;
-    }
-
-    .btn-row {
-      display: flex;
-      gap: 8px;
-      margin-top: 8px;
-    }
-
-    .action-btn {
-      flex: 1;
-      padding: 10px;
-      border-radius: 8px;
-      border: 1px solid #ddd;
-      background: #fff;
-      color: #555;
-      font-size: 13px;
-      font-weight: 600;
-      cursor: pointer;
-      font-family: inherit;
-    }
-
-    .action-btn:hover { background: #f5f5f3; }
-
-    .download-btn {
-      background: #E6F1FB;
-      border-color: #85B7EB;
-      color: #185FA5;
-    }
-
-    .download-btn:hover { background: #cce0f5; }
-
-    @media (max-width: 500px) {
-      .category-grid, .loc-row, .child-row { grid-template-columns: 1fr; }
-    }
-  </style>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>🌸 어린이집 알림장 생성기</title>
+<link href="https://fonts.googleapis.com/css2?family=Gaegu:wght@400;700&display=swap" rel="stylesheet">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/docx/8.5.0/docx.umd.min.js"></script>
+<style>
+*{box-sizing:border-box;margin:0;padding:0;}
+body{font-family:'Gaegu',cursive;background:#f5f7f5;min-height:100vh;padding:1.5rem 1rem;}
+.wrap{max-width:700px;margin:0 auto;}
+.app-title{font-size:26px;font-weight:700;color:#1D9E75;text-align:center;margin-bottom:4px;}
+.app-sub{font-size:15px;color:#888;text-align:center;margin-bottom:1.2rem;}
+.tabs{display:flex;gap:6px;margin-bottom:14px;}
+.tab{flex:1;padding:9px 6px;border:1px solid #ddd;border-radius:10px;background:#fff;color:#888;font-size:15px;cursor:pointer;font-family:'Gaegu',cursive;text-align:center;}
+.tab.on{background:#EAF3DE;border-color:#97C459;color:#3B6D11;font-weight:700;}
+.card{background:#fff;border:1px solid #e0e0dc;border-radius:14px;padding:1rem 1.25rem;margin-bottom:12px;}
+.card-title{font-size:16px;font-weight:700;color:#333;margin-bottom:10px;}
+.field{display:flex;flex-direction:column;gap:4px;margin-bottom:10px;}
+.label{font-size:14px;color:#888;}
+input[type=text],textarea{width:100%;font-size:15px;font-family:'Gaegu',cursive;border-radius:8px;border:1px solid #ddd;padding:7px 10px;color:#333;background:#f9f9f7;}
+input[type=text]:focus,textarea:focus{outline:none;border-color:#1D9E75;}
+textarea{resize:none;line-height:1.5;}
+input::placeholder,textarea::placeholder{color:#bbb;font-family:'Gaegu',cursive;}
+.grid2{display:grid;grid-template-columns:1fr 1fr;gap:8px;}
+.cat-grid{display:grid;grid-template-columns:1fr 1fr;gap:8px;}
+.kids-row{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:12px;}
+.kid-btn{padding:8px 14px;border:1px solid #ddd;border-radius:99px;background:#fff;color:#888;font-size:15px;cursor:pointer;font-family:'Gaegu',cursive;}
+.kid-btn.selected{background:#FBEAF0;border-color:#ED93B1;color:#993556;font-weight:700;}
+.kid-btn.add{background:#EAF3DE;border-color:#97C459;color:#3B6D11;}
+.mode-toggle{display:flex;gap:6px;margin-bottom:12px;}
+.mode-btn{flex:1;padding:8px;border:1px solid #ddd;border-radius:8px;background:#fff;color:#888;font-size:14px;cursor:pointer;font-family:'Gaegu',cursive;text-align:center;}
+.mode-btn.a-out{background:#EAF3DE;border-color:#97C459;color:#3B6D11;font-weight:700;}
+.mode-btn.a-in{background:#E6F1FB;border-color:#85B7EB;color:#185FA5;font-weight:700;}
+.mode-btn.a-both{background:#FAEEDA;border-color:#EF9F27;color:#854F0B;font-weight:700;}
+.act-block{border-radius:8px;padding:10px 12px;margin-bottom:10px;}
+.out-block{background:#EAF3DE;border:1px solid #97C459;}
+.in-block{background:#E6F1FB;border:1px solid #85B7EB;}
+.blk-label{font-size:14px;font-weight:700;margin-bottom:8px;}
+.out-block .blk-label{color:#3B6D11;}
+.in-block .blk-label{color:#185FA5;}
+.health-block{background:#FCEBEB;border:1px solid #F09595;border-radius:8px;padding:10px 12px;}
+.health-block .blk-label{color:#A32D2D;font-size:14px;font-weight:700;margin-bottom:6px;}
+.special-block{background:#FAEEDA;border:1px solid #EF9F27;border-radius:8px;padding:10px 12px;}
+.special-block .blk-label{color:#854F0B;font-size:14px;font-weight:700;margin-bottom:6px;}
+.gen-btn{width:100%;padding:13px;border-radius:10px;border:none;background:#1D9E75;color:white;font-size:17px;font-weight:700;cursor:pointer;font-family:'Gaegu',cursive;margin-top:4px;}
+.gen-btn:hover{opacity:0.88;}
+.gen-btn:disabled{opacity:0.5;cursor:not-allowed;}
+.result-tabs{display:flex;margin-top:14px;border-radius:10px 10px 0 0;overflow:hidden;border:1px solid #ddd;border-bottom:none;}
+.rtab{flex:1;padding:10px;font-size:15px;font-weight:700;cursor:pointer;border:none;background:#f0f0ee;color:#888;font-family:'Gaegu',cursive;}
+.rtab.on{background:#fff;color:#333;}
+.rtab:first-child{border-right:1px solid #ddd;}
+.result-box{background:#fff;border:1px solid #ddd;border-radius:0 0 12px 12px;padding:1.25rem;white-space:pre-wrap;font-size:16px;line-height:1.9;color:#333;min-height:100px;font-family:'Gaegu',cursive;}
+.result-box.short{background:#FFF5F8;border-color:#ED93B1;}
+.char-count{font-size:13px;color:#aaa;text-align:right;margin-top:4px;}
+.btn-row{display:flex;gap:8px;margin-top:8px;}
+.act-btn{flex:1;padding:10px;border-radius:8px;border:1px solid #ddd;background:#fff;color:#555;font-size:15px;font-weight:700;cursor:pointer;font-family:'Gaegu',cursive;}
+.act-btn:hover{background:#f5f5f3;}
+.dl-btn{background:#E6F1FB;border-color:#85B7EB;color:#185FA5;}
+.kid-profile-card{background:#f9f9f7;border:1px solid #eee;border-radius:8px;padding:10px 12px;margin-bottom:8px;}
+.kid-name-row{display:flex;align-items:center;gap:8px;margin-bottom:8px;}
+.kid-avatar{width:36px;height:36px;border-radius:50%;background:#FBEAF0;border:1px solid #ED93B1;display:flex;align-items:center;justify-content:center;font-size:16px;font-weight:700;color:#993556;flex-shrink:0;}
+.del-btn{margin-left:auto;padding:3px 10px;border:1px solid #ddd;border-radius:99px;background:#fff;color:#888;font-size:13px;cursor:pointer;font-family:'Gaegu',cursive;}
+.save-msg{font-size:13px;color:#3B6D11;background:#EAF3DE;border-radius:8px;padding:4px 10px;text-align:center;margin-top:8px;}
+.common-preview{background:#f9f9f7;border-radius:8px;padding:8px 12px;font-size:14px;color:#888;line-height:1.8;}
+@media(max-width:500px){.grid2,.cat-grid{grid-template-columns:1fr;}.mode-toggle{flex-wrap:wrap;}}
+</style>
 </head>
 <body>
-<div class="container">
-  <p class="app-title">🌸 어린이집 알림장 생성기</p>
-  <p class="app-sub">키워드를 입력하면 AI가 알림장을 자동으로 작성해드려요</p>
-
-  <div class="section">
-    <p class="section-title">아이 정보</p>
-    <div class="child-row">
-      <div class="field-group">
-        <span class="field-label">아이 이름</span>
-        <input type="text" id="childName" placeholder="예) 혜경" />
-      </div>
-      <div class="field-group">
-        <span class="field-label">반 이름</span>
-        <input type="text" id="className" placeholder="예) 하늘반" />
-      </div>
-    </div>
+<div class="wrap">
+  <p class="app-title">🌸 어린이집 알림장</p>
+  <p class="app-sub">키워드만 입력하면 AI가 알림장을 써줘요</p>
+  <div class="tabs">
+    <button class="tab on" onclick="showTab('write')">✏️ 알림장 쓰기</button>
+    <button class="tab" onclick="showTab('kids')">👧 아이 프로필</button>
+    <button class="tab" onclick="showTab('common')">📋 공통 정보</button>
   </div>
 
-  <div class="section">
-    <p class="section-title">활동 유형 선택</p>
-    <div class="mode-toggle">
-      <button class="mode-btn active-outdoor" id="btn-outdoor" onclick="setMode('outdoor')">🌿 야외활동만</button>
-      <button class="mode-btn" id="btn-indoor" onclick="setMode('indoor')">🏠 실내활동만</button>
-      <button class="mode-btn" id="btn-both" onclick="setMode('both')">🌿+🏠 야외+실내</button>
-    </div>
-
-    <div id="outdoor-block" class="activity-block outdoor-block">
-      <p class="block-label">🌿 야외활동</p>
-      <div class="loc-row">
-        <div class="field-group">
-          <span class="field-label">목적지 / 장소</span>
-          <input type="text" id="destination" placeholder="예) 뒷산 숲, 공원" />
+  <div id="tab-write">
+    <div class="card">
+      <p class="card-title">아이 선택</p>
+      <div class="kids-row" id="kidsBtns"></div>
+      <div id="selectedKidInfo" style="display:none;" class="kid-profile-card">
+        <div class="kid-name-row">
+          <div class="kid-avatar" id="kidAvatar"></div>
+          <span style="font-size:16px;font-weight:700;" id="kidNameDisplay"></span>
         </div>
-        <div class="field-group">
-          <span class="field-label">체험학습 장소</span>
-          <input type="text" id="experiencePlace" placeholder="예) 농장, 박물관" />
+        <div style="font-size:14px;color:#888;" id="kidCharDisplay"></div>
+      </div>
+    </div>
+    <div class="card">
+      <p class="card-title">활동 유형</p>
+      <div class="mode-toggle">
+        <button class="mode-btn a-out" id="btn-out" onclick="setMode('out')">🌿 야외</button>
+        <button class="mode-btn" id="btn-in" onclick="setMode('in')">🏠 실내</button>
+        <button class="mode-btn" id="btn-both" onclick="setMode('both')">🌿+🏠 모두</button>
+      </div>
+      <div id="out-block" class="act-block out-block">
+        <p class="blk-label">🌿 야외활동</p>
+        <div class="grid2">
+          <div class="field"><span class="label">목적지/장소</span><input type="text" id="dest" placeholder="예) 뒷산 숲, 공원"/></div>
+          <div class="field"><span class="label">체험학습 장소</span><input type="text" id="exp" placeholder="예) 농장, 박물관"/></div>
+        </div>
+        <div class="field" style="margin-bottom:0;"><span class="label">체험학습 내용</span><textarea id="expContent" rows="2" placeholder="예) 고추 모종 심기, 동물 먹이주기"></textarea></div>
+      </div>
+      <div id="in-block" class="act-block in-block" style="display:none;">
+        <p class="blk-label">🏠 실내활동</p>
+        <div class="field" style="margin-bottom:0;"><span class="label">실내활동 내용</span><textarea id="inDesc" rows="2" placeholder="예) 미술활동, 영어수업, 블록놀이"></textarea></div>
+      </div>
+    </div>
+    <div class="card">
+      <p class="card-title">오늘의 키워드</p>
+      <div class="cat-grid">
+        <div class="field"><span class="label">💬 언어/말하기</span><textarea id="cat1" rows="2" placeholder="예) 고추?, 다람쥐찾기"></textarea></div>
+        <div class="field"><span class="label">🎮 활동과 놀이</span><textarea id="cat2" rows="2" placeholder="예) 모종심기, 숲탐색"></textarea></div>
+        <div class="field"><span class="label">🍱 식사</span><textarea id="cat3" rows="2" placeholder="예) 잘먹음, 조금남김"></textarea></div>
+        <div class="field"><span class="label">🤝 사회성/발달</span><textarea id="cat4" rows="2" placeholder="예) 친구와잘어울림"></textarea></div>
+      </div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:8px;">
+        <div class="health-block">
+          <p class="blk-label">💊 건강/약 복용 상태</p>
+          <textarea id="cat5" rows="2" placeholder="예) 오전 약 복용함, 콧물 있음" style="background:#fff8f8;border:1px solid #F09595;font-family:'Gaegu',cursive;font-size:14px;width:100%;border-radius:6px;padding:6px 8px;resize:none;"></textarea>
+        </div>
+        <div class="special-block">
+          <p class="blk-label">⭐ 특징적인 일</p>
+          <textarea id="cat6" rows="2" placeholder="예) 처음 혼자 그네 탐" style="background:#fffbf5;border:1px solid #EF9F27;font-family:'Gaegu',cursive;font-size:14px;width:100%;border-radius:6px;padding:6px 8px;resize:none;"></textarea>
         </div>
       </div>
     </div>
-
-    <div id="indoor-block" class="activity-block indoor-block" style="display:none;">
-      <p class="block-label">🏠 실내활동</p>
-      <div class="field-group">
-        <span class="field-label">실내활동 내용 (선택)</span>
-        <input type="text" id="indoorDesc" placeholder="예) 오후 실내수업, 영어수업, 미술활동" />
+    <div class="card">
+      <p class="card-title">내일 준비물 & 공지사항</p>
+      <div class="field"><span class="label">📋 내일 준비물</span><textarea id="todayPrep" rows="2" placeholder="예) 여벌옷, 물통"></textarea></div>
+      <div class="field" style="margin-bottom:0;"><span class="label">📢 공지사항</span><textarea id="todayNotice" rows="2" placeholder="예) 내일 현장학습 있어요"></textarea></div>
+    </div>
+    <div class="card" id="commonPreview" style="display:none;">
+      <p class="card-title">공통 정보 <span style="font-size:13px;color:#1D9E75;font-weight:400;">자동 반영됨</span></p>
+      <div class="common-preview" id="commonPreviewContent"></div>
+    </div>
+    <button class="gen-btn" id="genBtn" onclick="generate()">✨ 알림장 자동 생성하기</button>
+    <div id="resultArea" style="display:none;">
+      <div class="result-tabs">
+        <button class="rtab on" id="rtab-full" onclick="switchRTab('full')">📝 전체 알림장</button>
+        <button class="rtab" id="rtab-short" onclick="switchRTab('short')">✨ 200자 요약</button>
+      </div>
+      <div class="result-box" id="resultText"></div>
+      <p class="char-count" id="charCount"></p>
+      <div class="btn-row">
+        <button class="act-btn" onclick="copyResult()">복사하기</button>
+        <button class="act-btn dl-btn" onclick="downloadWord()">📄 워드 다운로드</button>
       </div>
     </div>
   </div>
 
-  <div class="section">
-    <p class="section-title">소주제별 키워드 입력</p>
-    <div class="category-grid">
-      <div class="field-group">
-        <span class="field-label">💬 언어/말하기 발달</span>
-        <textarea id="cat1" rows="2" placeholder="예) 고추?, 다람쥐 찾아볼까"></textarea>
-      </div>
-      <div class="field-group">
-        <span class="field-label">🎮 활동과 놀이</span>
-        <textarea id="cat2" rows="2" placeholder="예) 고추모종심기, 높은곳 도전"></textarea>
-      </div>
-      <div class="field-group">
-        <span class="field-label">🍱 식사</span>
-        <textarea id="cat3" rows="2" placeholder="예) 잘먹음, 편식없음"></textarea>
-      </div>
-      <div class="field-group">
-        <span class="field-label">🤝 사회성/발달</span>
-        <textarea id="cat4" rows="2" placeholder="예) 친구와 잘어울림, 장화 투정"></textarea>
-      </div>
-      <div class="field-group">
-        <span class="field-label">📋 내일 준비물</span>
-        <textarea id="cat5" rows="2" placeholder="예) 여벌옷, 물통, 돗자리"></textarea>
-      </div>
-      <div class="field-group">
-        <span class="field-label">📢 공지사항</span>
-        <textarea id="cat6" rows="2" placeholder="예) 4월 교재 전달, 연휴 안내"></textarea>
+  <div id="tab-kids" style="display:none;">
+    <div class="card">
+      <p class="card-title">아이 프로필 관리</p>
+      <div id="kidsProfileList"></div>
+      <div style="border-top:1px solid #eee;padding-top:12px;margin-top:4px;">
+        <p style="font-size:15px;font-weight:700;margin-bottom:8px;">➕ 아이 추가</p>
+        <div class="grid2">
+          <div class="field"><span class="label">이름</span><input type="text" id="newKidName" placeholder="예) 혜경"/></div>
+          <div class="field"><span class="label">반 이름</span><input type="text" id="newKidClass" placeholder="예) 하늘반"/></div>
+        </div>
+        <div class="field"><span class="label">특징/성격</span><textarea id="newKidChar" rows="2" placeholder="예) 활발하고 호기심 많음"></textarea></div>
+        <button class="gen-btn" onclick="addKid()" style="margin-top:8px;font-size:15px;">아이 추가하기</button>
       </div>
     </div>
   </div>
 
-  <button class="generate-btn" id="genBtn" onclick="generateNote()">✨ 알림장 자동 생성하기</button>
-
-  <div id="resultArea" style="display:none;">
-    <div class="result-tabs">
-      <button class="tab-btn active" id="tab-full" onclick="switchTab('full')">📝 전체 알림장</button>
-      <button class="tab-btn" id="tab-short" onclick="switchTab('short')">✨ 200자 요약</button>
-    </div>
-    <div class="result-box" id="resultText"></div>
-    <p class="char-count" id="charCount"></p>
-    <div class="btn-row">
-      <button class="action-btn" onclick="copyResult()">복사하기</button>
-      <button class="action-btn download-btn" onclick="downloadWord()">📄 워드 다운로드</button>
+  <div id="tab-common" style="display:none;">
+    <div class="card">
+      <p class="card-title">공통 정보 <span style="font-size:13px;color:#888;font-weight:400;">한번 저장하면 유지돼요</span></p>
+      <div class="field"><span class="label">📋 기본 준비물</span><textarea id="com1" rows="2" placeholder="예) 여벌옷, 물통"></textarea></div>
+      <div class="field"><span class="label">📢 공통 공지사항</span><textarea id="com2" rows="2" placeholder="예) 5월 현장학습 안내"></textarea></div>
+      <div class="field" style="margin-bottom:0;"><span class="label">💌 마무리 인사</span><input type="text" id="com3" placeholder="예) 즐거운 주말 보내세요!"/></div>
+      <button class="gen-btn" onclick="saveCommon()" style="background:#3B6D11;font-size:15px;margin-top:12px;">💾 공통 정보 저장하기</button>
+      <div id="savedMsg" style="display:none;" class="save-msg">저장됐어요! 💕</div>
     </div>
   </div>
 </div>
-
 <script>
-  let currentMode = 'outdoor';
-  let fullText = '';
-  let shortText = '';
-  let currentTab = 'full';
-
-  const API_KEY = 'YOUR_ANTHROPIC_API_KEY'; // ← 여기에 API 키 입력
-
-  function setMode(mode) {
-    currentMode = mode;
-    document.getElementById('btn-outdoor').className = 'mode-btn' + (mode === 'outdoor' ? ' active-outdoor' : '');
-    document.getElementById('btn-indoor').className  = 'mode-btn' + (mode === 'indoor'  ? ' active-indoor'  : '');
-    document.getElementById('btn-both').className    = 'mode-btn' + (mode === 'both'    ? ' active-both'    : '');
-    document.getElementById('outdoor-block').style.display = (mode === 'outdoor' || mode === 'both') ? 'block' : 'none';
-    document.getElementById('indoor-block').style.display  = (mode === 'indoor'  || mode === 'both') ? 'block' : 'none';
-  }
-
-  function switchTab(tab) {
-    currentTab = tab;
-    document.getElementById('tab-full').className  = 'tab-btn' + (tab === 'full'  ? ' active' : '');
-    document.getElementById('tab-short').className = 'tab-btn' + (tab === 'short' ? ' active' : '');
-    const box = document.getElementById('resultText');
-    if (tab === 'full') {
-      box.className = 'result-box';
-      box.textContent = fullText || '아직 전체 알림장이 없어요!';
-      document.getElementById('charCount').textContent = fullText ? `총 ${fullText.length}자` : '';
-    } else {
-      box.className = 'result-box short-mode';
-      box.textContent = shortText || '아직 200자 요약이 없어요!';
-      document.getElementById('charCount').textContent = shortText ? `총 ${shortText.length}자` : '';
-    }
-  }
-
-  async function callClaude(prompt, maxTokens) {
-    const res = await fetch('https://api.anthropic.com/v1/messages', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        model: 'claude-sonnet-4-20250514',
-        max_tokens: maxTokens,
-        messages: [{ role: 'user', content: prompt }]
-      })
-    });
-    const data = await res.json();
-    return data.content.map(i => i.text || '').join('\n');
-  }
-
-  async function generateNote() {
-    const childName       = document.getElementById('childName').value.trim() || '아이';
-    const className       = document.getElementById('className').value.trim();
-    const destination     = document.getElementById('destination').value.trim();
-    const experiencePlace = document.getElementById('experiencePlace').value.trim();
-    const indoorDesc      = document.getElementById('indoorDesc').value.trim();
-    const cat1 = document.getElementById('cat1').value.trim();
-    const cat2 = document.getElementById('cat2').value.trim();
-    const cat3 = document.getElementById('cat3').value.trim();
-    const cat4 = document.getElementById('cat4').value.trim();
-    const cat5 = document.getElementById('cat5').value.trim();
-    const cat6 = document.getElementById('cat6').value.trim();
-
-    if (!cat1 && !cat2 && !cat3 && !cat4 && !cat5 && !cat6) {
-      alert('최소 하나의 키워드를 입력해주세요!'); return;
-    }
-
-    const btn = document.getElementById('genBtn');
-    btn.disabled = true; btn.textContent = '작성 중...';
-    document.getElementById('resultArea').style.display = 'block';
-    document.getElementById('resultText').className = 'result-box';
-    document.getElementById('resultText').textContent = '알림장을 작성하고 있어요...';
-    document.getElementById('charCount').textContent = '';
-    document.getElementById('tab-full').className  = 'tab-btn active';
-    document.getElementById('tab-short').className = 'tab-btn';
-    currentTab = 'full';
-
-    let activityInfo = '';
-    if (currentMode === 'outdoor') {
-      activityInfo = `활동 유형: 야외활동\n${destination ? '목적지: ' + destination + '\n' : ''}${experiencePlace ? '체험학습 장소: ' + experiencePlace + '\n' : ''}`;
-    } else if (currentMode === 'indoor') {
-      activityInfo = `활동 유형: 실내활동\n${indoorDesc ? '실내활동 내용: ' + indoorDesc + '\n' : ''}`;
-    } else {
-      activityInfo = `활동 유형: 야외활동 + 실내활동 (오전 야외, 오후 실내)\n${destination ? '야외 목적지: ' + destination + '\n' : ''}${experiencePlace ? '체험학습 장소: ' + experiencePlace + '\n' : ''}${indoorDesc ? '실내활동 내용: ' + indoorDesc + '\n' : ''}`;
-    }
-
-    const keywords = `${cat1 ? '언어/말하기 발달: ' + cat1 + '\n' : ''}${cat2 ? '활동과 놀이: ' + cat2 + '\n' : ''}${cat3 ? '식사: ' + cat3 + '\n' : ''}${cat4 ? '사회성/발달: ' + cat4 + '\n' : ''}${cat5 ? '내일 준비물: ' + cat5 + '\n' : ''}${cat6 ? '공지사항: ' + cat6 + '\n' : ''}`;
-
-    const fullPrompt = `당신은 어린이집 선생님입니다. 아래 키워드를 바탕으로 따뜻하고 사랑스러운 어린이집 알림장을 작성해주세요.
-아이 이름: ${childName}
-${className ? '반 이름: ' + className : ''}
-${activityInfo}
-[소주제별 키워드]
-${keywords}
-작성 규칙:
-- 입력된 키워드가 있는 소주제만 포함하고 소주제 구분 없이 쭉 이어서 자연스럽게 작성하세요
-- 야외+실내 동시인 경우 오전 야외활동 → 오후 실내활동 흐름으로 연결해주세요
-- 따뜻하고 친근한 말투로 부모님께 아이의 하루를 생생하게 전달해주세요
-- 아이 이름을 자연스럽게 넣어주세요
-- 이모지를 중간중간 적절히 넣어 읽기 편하게 해주세요
-- 인사말로 시작하고 마무리 인사로 끝내주세요`;
-
-    const shortPrompt = `당신은 어린이집 선생님입니다. 아래 키워드를 바탕으로 귀엽고 따뜻한 200자 이내의 짧은 알림장을 작성해주세요.
-아이 이름: ${childName}
-${activityInfo}
-[키워드]
-${keywords}
-작성 규칙:
-- 반드시 200자 이내로 작성하세요
-- 핵심 내용만 귀엽고 따뜻하게 담아주세요
-- 이모지 2~3개 사용해주세요
-- 아이 이름 한 번 자연스럽게 넣어주세요
-- 카카오톡 메시지처럼 친근하고 짧게 써주세요
-- 인사말 없이 바로 내용으로 시작해주세요`;
-
-    try {
-      const [full, short] = await Promise.all([
-        callClaude(fullPrompt, 1200),
-        callClaude(shortPrompt, 400)
-      ]);
-      fullText = full; shortText = short;
-      document.getElementById('resultText').textContent = fullText;
-      document.getElementById('charCount').textContent = `총 ${fullText.length}자`;
-    } catch (e) {
-      document.getElementById('resultText').textContent = '앗, 오류가 발생했어요. 다시 시도해주세요!';
-      fullText = ''; shortText = '';
-    }
-
-    btn.disabled = false; btn.textContent = '✨ 알림장 자동 생성하기';
-  }
-
-  function copyResult() {
-    const text = currentTab === 'full' ? fullText : shortText;
-    if (!text) return;
-    navigator.clipboard.writeText(text).then(() => {
-      const btn = document.querySelectorAll('.action-btn')[0];
-      btn.textContent = '복사됐어요!';
-      setTimeout(() => { btn.textContent = '복사하기'; }, 1500);
-    });
-  }
-
-  async function downloadWord() {
-    const text = currentTab === 'full' ? fullText : shortText;
-    if (!text) return;
-    const childName = document.getElementById('childName').value.trim() || '아이';
-    const className = document.getElementById('className').value.trim();
-    const today = new Date().toLocaleDateString('ko-KR', { year: 'numeric', month: 'long', day: 'numeric' });
-    const { Document, Packer, Paragraph, TextRun, AlignmentType, BorderStyle } = docx;
-    const lines = text.split('\n').filter(l => l.trim() !== '');
-    const label = currentTab === 'short' ? ' (200자 요약)' : '';
-    const children = [
-      new Paragraph({ alignment: AlignmentType.CENTER, spacing: { before: 0, after: 120 },
-        children: [new TextRun({ text: '🌸 어린이집 알림장' + label + ' 🌸', bold: true, size: 40, font: 'Malgun Gothic', color: '1D9E75' })] }),
-      new Paragraph({ alignment: AlignmentType.CENTER, spacing: { before: 0, after: 80 },
-        children: [new TextRun({ text: `${className ? className + '  ·  ' : ''}${childName}  ·  ${today}`, size: 20, font: 'Malgun Gothic', color: '888780' })] }),
-      new Paragraph({ border: { bottom: { style: BorderStyle.SINGLE, size: 8, color: '1D9E75', space: 1 } },
-        spacing: { before: 0, after: 360 }, children: [new TextRun({ text: '' })] }),
-      ...lines.map(line => new Paragraph({ spacing: { before: 0, after: 180 },
-        children: [new TextRun({ text: line, size: 23, font: 'Malgun Gothic', color: '2C2C2A' })] })),
-      new Paragraph({ border: { bottom: { style: BorderStyle.SINGLE, size: 4, color: 'D3D1C7', space: 1 } },
-        spacing: { before: 280, after: 200 }, children: [new TextRun({ text: '' })] }),
-      new Paragraph({ alignment: AlignmentType.CENTER,
-        children: [new TextRun({ text: `💛 항상 사랑과 관심으로 ${childName}이를 돌봐주셔서 감사합니다 💛`, size: 20, font: 'Malgun Gothic', color: '888780' })] })
-    ];
-    const doc2 = new Document({ sections: [{ properties: { page: { size: { width: 11906, height: 16838 }, margin: { top: 1300, right: 1300, bottom: 1300, left: 1300 } } }, children }] });
-    const buffer = await Packer.toBuffer(doc2);
-    const blob = new Blob([buffer], { type: 'application/vnd.openxmlformats-officedocument.wordprocessingml.document' });
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement('a');
-    a.href = url;
-    a.download = `알림장_${childName}_${today}${currentTab === 'short' ? '_요약' : ''}.docx`;
-    a.click();
-    URL.revokeObjectURL(url);
-  }
+let kids=[];let common={prep:'',notice:'',closing:''};let selKid=null;let actMode='out';let fullText='';let shortText='';let curTab='full';
+try{kids=JSON.parse(localStorage.getItem('alimjang_kids')||'[]');}catch(e){kids=[];}
+try{const c=JSON.parse(localStorage.getItem('alimjang_common')||'{}');common={prep:c.prep||'',notice:c.notice||'',closing:c.closing||''};}catch(e){}
+function saveKids(){try{localStorage.setItem('alimjang_kids',JSON.stringify(kids));}catch(e){}}
+function saveCommonData(){try{localStorage.setItem('alimjang_common',JSON.stringify(common));}catch(e){}}
+function showTab(t){['write','kids','common'].forEach(x=>{document.getElementById('tab-'+x).style.display=x===t?'block':'none';});document.querySelectorAll('.tab').forEach((b,i)=>{b.className='tab'+(['write','kids','common'][i]===t?' on':'');});if(t==='kids')renderProfiles();if(t==='common')loadCommonFields();}
+function setMode(m){actMode=m;['out','in','both'].forEach(x=>{document.getElementById('btn-'+x).className='mode-btn'+(x===m?' a-'+x:'');});document.getElementById('out-block').style.display=(m==='out'||m==='both')?'block':'none';document.getElementById('in-block').style.display=(m==='in'||m==='both')?'block':'none';}
+function renderKidBtns(){const c=document.getElementById('kidsBtns');c.innerHTML='';kids.forEach((k,i)=>{const b=document.createElement('button');b.className='kid-btn'+(selKid===i?' selected':'');b.textContent=k.name;b.onclick=()=>selectKid(i);c.appendChild(b);});if(kids.length<7){const a=document.createElement('button');a.className='kid-btn add';a.textContent='+ 추가';a.onclick=()=>showTab('kids');c.appendChild(a);}}
+function selectKid(i){selKid=i;renderKidBtns();const k=kids[i];document.getElementById('selectedKidInfo').style.display='block';document.getElementById('kidAvatar').textContent=k.name[0];document.getElementById('kidNameDisplay').textContent=k.name+(k.className?' ('+k.className+')':'');document.getElementById('kidCharDisplay').textContent=k.character||'특징 정보 없음';showCommonPreview();}
+function showCommonPreview(){const lines=[];if(common.prep)lines.push('📋 기본준비물: '+common.prep);if(common.notice)lines.push('📢 공통공지: '+common.notice);if(common.closing)lines.push('💌 마무리: '+common.closing);const c=document.getElementById('commonPreview');const d=document.getElementById('commonPreviewContent');if(lines.length>0){c.style.display='block';d.innerHTML=lines.join('<br>');}else{c.style.display='none';}}
+function renderProfiles(){const c=document.getElementById('kidsProfileList');if(kids.length===0){c.innerHTML='<p style="color:#888;font-size:14px;margin-bottom:12px;">아직 등록된 아이가 없어요!</p>';return;}c.innerHTML=kids.map((k,i)=>`<div class="kid-profile-card"><div class="kid-name-row"><div class="kid-avatar">${k.name[0]}</div><div><span style="font-size:16px;font-weight:700;">${k.name}</span> <span style="font-size:13px;color:#888;">${k.className||''}</span></div><button class="del-btn" onclick="delKid(${i})">삭제</button></div><div class="field" style="margin-bottom:4px;"><span class="label">특징/성격</span><textarea rows="2" style="font-size:14px;" onchange="kids[${i}].character=this.value;saveKids()">${k.character||''}</textarea></div></div>`).join('');}
+function delKid(i){if(!confirm(kids[i].name+'을(를) 삭제할까요?'))return;kids.splice(i,1);saveKids();if(selKid===i){selKid=null;document.getElementById('selectedKidInfo').style.display='none';}else if(selKid>i){selKid--;}renderProfiles();renderKidBtns();}
+function addKid(){const name=document.getElementById('newKidName').value.trim();if(!name){alert('이름을 입력해주세요!');return;}if(kids.length>=7){alert('최대 7명까지 등록 가능해요!');return;}kids.push({name,className:document.getElementById('newKidClass').value.trim(),character:document.getElementById('newKidChar').value.trim()});saveKids();document.getElementById('newKidName').value='';document.getElementById('newKidClass').value='';document.getElementById('newKidChar').value='';renderProfiles();renderKidBtns();alert(name+'이(가) 추가됐어요! 💕');}
+function loadCommonFields(){document.getElementById('com1').value=common.prep;document.getElementById('com2').value=common.notice;document.getElementById('com3').value=common.closing;}
+function saveCommon(){common.prep=document.getElementById('com1').value.trim();common.notice=document.getElementById('com2').value.trim();common.closing=document.getElementById('com3').value.trim();saveCommonData();const msg=document.getElementById('savedMsg');msg.style.display='block';setTimeout(()=>{msg.style.display='none';},2000);showCommonPreview();}
+function switchRTab(t){curTab=t;document.getElementById('rtab-full').className='rtab'+(t==='full'?' on':'');document.getElementById('rtab-short').className='rtab'+(t==='short'?' on':'');const box=document.getElementById('resultText');if(t==='full'){box.className='result-box';box.textContent=fullText||'아직 없어요!';document.getElementById('charCount').textContent=fullText?`총 ${fullText.length}자`:''; }else{box.className='result-box short';box.textContent=shortText||'아직 없어요!';document.getElementById('charCount').textContent=shortText?`총 ${shortText.length}자`:''; }}
+async function callAPI(prompt,maxTokens){const res=await fetch('/api/generate',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({prompt,maxTokens})});if(!res.ok)throw new Error('API 오류: '+res.status);const data=await res.json();if(data.error)throw new Error(data.error);return data.text;}
+async function generate(){
+  const cat1=document.getElementById('cat1').value.trim();const cat2=document.getElementById('cat2').value.trim();const cat3=document.getElementById('cat3').value.trim();const cat4=document.getElementById('cat4').value.trim();const cat5=document.getElementById('cat5').value.trim();const cat6=document.getElementById('cat6').value.trim();const todayPrep=document.getElementById('todayPrep').value.trim();const todayNotice=document.getElementById('todayNotice').value.trim();
+  if(!cat1&&!cat2&&!cat3&&!cat4&&!cat5&&!cat6){alert('키워드를 최소 하나 입력해주세요!');return;}
+  const btn=document.getElementById('genBtn');btn.disabled=true;btn.textContent='작성 중... 💕';
+  document.getElementById('resultArea').style.display='block';document.getElementById('resultText').className='result-box';document.getElementById('resultText').textContent='알림장 작성 중이에요... 🌸';document.getElementById('charCount').textContent='';document.getElementById('rtab-full').className='rtab on';document.getElementById('rtab-short').className='rtab';curTab='full';
+  const kid=selKid!==null?kids[selKid]:null;const kidInfo=kid?`아이이름:${kid.name}. 반:${kid.className||'없음'}. 특징:${kid.character||'없음'}`:'아이이름:미선택';
+  const dest=document.getElementById('dest').value.trim();const exp=document.getElementById('exp').value.trim();const expContent=document.getElementById('expContent').value.trim();const inDesc=document.getElementById('inDesc').value.trim();
+  let actInfo='';
+  if(actMode==='out')actInfo=`야외활동. 목적지:${dest||'없음'}. 체험학습장소:${exp||'없음'}. 체험학습내용:${expContent||'없음'}`;
+  else if(actMode==='in')actInfo=`실내활동. 내용:${inDesc||'없음'}`;
+  else actInfo=`야외+실내. 야외목적지:${dest||'없음'}. 체험학습장소:${exp||'없음'}. 체험학습내용:${expContent||'없음'}. 실내활동:${inDesc||'없음'}`;
+  const prepFinal=[common.prep,todayPrep].filter(Boolean).join(', ')||'없음';const noticeFinal=[common.notice,todayNotice].filter(Boolean).join(' / ')||'없음';const closing=common.closing||'좋은 하루 보내세요!';
+  const kw=`${cat1?'언어:'+cat1+'. ':''}${cat2?'활동:'+cat2+'. ':''}${cat3?'식사:'+cat3+'. ':''}${cat4?'사회성:'+cat4+'. ':''}${cat5?'건강/약복용:'+cat5+'. ':''}${cat6?'특징적인일:'+cat6+'. ':''}`;
+  const fullPrompt=`어린이집 선생님으로서 따뜻하고 사랑스러운 알림장을 작성해주세요.\n${kidInfo}\n활동유형:${actInfo}\n키워드:${kw}\n준비물:${prepFinal}\n공지사항:${noticeFinal}\n마무리인사:${closing}\n규칙: 소주제 구분없이 하나의 글처럼 자연스럽게. 아이 특징 반영. 이모지 중간중간. 인사말로 시작. 건강/약복용 있으면 포함. 특징적인 일 생생하게. 준비물과 공지사항 마지막에. 마무리인사로 끝내기.`;
+  const shortPrompt=`어린이집 선생님으로서 200자 이내의 귀엽고 따뜻한 알림장을 작성해주세요.\n${kidInfo}\n활동:${actInfo}\n키워드:${kw}\n규칙:200자 이내. 이모지 2~3개. 카카오톡처럼 친근하게. 바로 내용 시작.`;
+  try{const [f,s]=await Promise.all([callAPI(fullPrompt,1200),callAPI(shortPrompt,400)]);fullText=f;shortText=s;document.getElementById('resultText').textContent=fullText;document.getElementById('charCount').textContent=`총 ${fullText.length}자`;}
+  catch(e){document.getElementById('resultText').textContent='오류가 발생했어요 😥\n'+e.message;fullText='';shortText='';}
+  btn.disabled=false;btn.textContent='✨ 알림장 자동 생성하기';
+}
+function copyResult(){const t=curTab==='full'?fullText:shortText;if(!t)return;navigator.clipboard.writeText(t).then(()=>{const b=document.querySelectorAll('.act-btn')[0];b.textContent='복사됐어요!';setTimeout(()=>b.textContent='복사하기',1500);});}
+async function downloadWord(){const t=curTab==='full'?fullText:shortText;if(!t)return;const kid=selKid!==null?kids[selKid]:null;const childName=kid?kid.name:'아이';const className=kid?kid.className:'';const today=new Date().toLocaleDateString('ko-KR',{year:'numeric',month:'long',day:'numeric'});const {Document,Packer,Paragraph,TextRun,AlignmentType,BorderStyle}=docx;const lines=t.split('\n').filter(l=>l.trim()!=='');const label=curTab==='short'?' (200자 요약)':'';const children=[new Paragraph({alignment:AlignmentType.CENTER,spacing:{before:0,after:120},children:[new TextRun({text:'🌸 어린이집 알림장'+label+' 🌸',bold:true,size:40,font:'Malgun Gothic',color:'1D9E75'})]}),new Paragraph({alignment:AlignmentType.CENTER,spacing:{before:0,after:80},children:[new TextRun({text:`${className?className+'  ·  ':''}${childName}  ·  ${today}`,size:20,font:'Malgun Gothic',color:'888780'})]}),new Paragraph({border:{bottom:{style:BorderStyle.SINGLE,size:8,color:'1D9E75',space:1}},spacing:{before:0,after:360},children:[new TextRun({text:''})]}), ...lines.map(line=>new Paragraph({spacing:{before:0,after:180},children:[new TextRun({text:line,size:23,font:'Malgun Gothic',color:'2C2C2A'})]})),new Paragraph({border:{bottom:{style:BorderStyle.SINGLE,size:4,color:'D3D1C7',space:1}},spacing:{before:280,after:200},children:[new TextRun({text:''})]}),new Paragraph({alignment:AlignmentType.CENTER,children:[new TextRun({text:`💛 항상 사랑과 관심으로 ${childName}이를 돌봐주셔서 감사합니다 💛`,size:20,font:'Malgun Gothic',color:'888780'})]})];const doc2=new Document({sections:[{properties:{page:{size:{width:11906,height:16838},margin:{top:1300,right:1300,bottom:1300,left:1300}}},children}]});const buf=await Packer.toBuffer(doc2);const blob=new Blob([buf],{type:'application/vnd.openxmlformats-officedocument.wordprocessingml.document'});const url=URL.createObjectURL(blob);const a=document.createElement('a');a.href=url;a.download=`알림장_${childName}_${today}.docx`;a.click();URL.revokeObjectURL(url);}
+renderKidBtns();loadCommonFields();showCommonPreview();
 </script>
 </body>
 </html>
