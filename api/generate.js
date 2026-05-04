@@ -31,11 +31,12 @@ export default async function handler(req, res) {
 
   return new Promise((resolve) => {
     const request = https.request(options, (response) => {
-      let data = '';
-      response.on('data', chunk => data += chunk);
+      let chunks = [];
+response.on('data', chunk => chunks.push(chunk));
       response.on('end', () => {
         try {
-          const parsed = JSON.parse(data);
+          const data = Buffer.concat(chunks).toString('utf8');
+const parsed = JSON.parse(data);
           if (parsed.error) {
             res.status(500).json({ error: parsed.error.message });
           } else {
