@@ -143,7 +143,17 @@ input::placeholder,textarea::placeholder{color:#888780;font-family:'Gaegu',cursi
   <div id="tab-alarm">
 
     <div class="card">
-      <div class="card-title">🌿 오늘 공통 활동 입력 <span style="font-size:13px;color:#888780;font-weight:400;">(한번만 입력 → 모든 아이 공유)</span></div>
+      <div class="card-title">👶 아이 선택</div>
+      <div class="kids-row" id="kidsBtns"></div>
+    </div>
+
+    <div class="card" id="kidInfoCard" style="display:none;">
+      <div class="card-title">📋 아이 정보 확인</div>
+      <div class="kid-info-preview" id="kidInfoPreview"></div>
+    </div>
+
+    <div class="card">
+      <div class="card-title">🌿 오늘 활동 유형</div>
       <div class="mode-row">
         <div class="mode-btn a-out" onclick="setMode('out')">🌿 야외활동</div>
         <div class="mode-btn" onclick="setMode('in')">🏠 실내활동</div>
@@ -157,7 +167,11 @@ input::placeholder,textarea::placeholder{color:#888780;font-family:'Gaegu',cursi
         <div class="blk-label">🏠 실내활동</div>
         <div class="field"><label class="label">실내활동 내용</label><input type="text" id="inAct" placeholder="예: 우산 만들기, 악기놀이"></div>
       </div>
-      <div class="cat-grid" style="margin-top:8px;">
+    </div>
+
+    <div class="card">
+      <div class="card-title">✏️ 오늘의 키워드</div>
+      <div class="cat-grid">
         <div class="field"><label class="label">💬 언어/말하기</label><input type="text" id="cat1" placeholder="예: 다람쥐 찾기"></div>
         <div class="field"><label class="label">🎮 활동과 놀이</label><input type="text" id="cat2" placeholder="예: 모종심기"></div>
         <div class="field"><label class="label">🍱 식사</label><input type="text" id="cat3" placeholder="예: 잘 먹음, 당근 조금 남김"></div>
@@ -167,15 +181,8 @@ input::placeholder,textarea::placeholder{color:#888780;font-family:'Gaegu',cursi
       </div>
     </div>
 
-    <div class="card">
-      <div class="card-title">👶 아이 선택 후 바로 생성!</div>
-      <div style="font-size:14px;font-weight:700;color:#888780;margin-bottom:10px;">아이 버튼 클릭하면 바로 알림장이 생성돼요 🌿</div>
-      <div class="kids-row" id="kidsBtns"></div>
-    </div>
-
-    <div class="card" id="kidInfoCard" style="display:none;">
-      <div class="card-title">📋 선택된 아이</div>
-      <div class="kid-info-preview" id="kidInfoPreview"></div>
+    <div class="gen-btn-row">
+      <button class="gen-btn gen-main" onclick="generateAlarm()">🌿 알림장 자동 생성하기</button>
     </div>
 
     <div class="loading-box" id="loadingBox">✨ 알림장 작성 중이에요... 잠깐만요! 🥰</div>
