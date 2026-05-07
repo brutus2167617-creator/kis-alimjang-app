@@ -141,18 +141,9 @@ input::placeholder,textarea::placeholder{color:#888780;font-family:'Gaegu',cursi
 
   <!-- 알림장 탭 -->
   <div id="tab-alarm">
-    <div class="card">
-      <div class="card-title">👶 아이 선택</div>
-      <div class="kids-row" id="kidsBtns"></div>
-    </div>
-
-    <div class="card" id="kidInfoCard" style="display:none;">
-      <div class="card-title">📋 아이 정보 확인</div>
-      <div class="kid-info-preview" id="kidInfoPreview"></div>
-    </div>
 
     <div class="card">
-      <div class="card-title">🌿 오늘 활동 유형</div>
+      <div class="card-title">🌿 오늘 공통 활동 입력 <span style="font-size:13px;color:#888780;font-weight:400;">(한번만 입력 → 모든 아이 공유)</span></div>
       <div class="mode-row">
         <div class="mode-btn a-out" onclick="setMode('out')">🌿 야외활동</div>
         <div class="mode-btn" onclick="setMode('in')">🏠 실내활동</div>
@@ -166,11 +157,7 @@ input::placeholder,textarea::placeholder{color:#888780;font-family:'Gaegu',cursi
         <div class="blk-label">🏠 실내활동</div>
         <div class="field"><label class="label">실내활동 내용</label><input type="text" id="inAct" placeholder="예: 우산 만들기, 악기놀이"></div>
       </div>
-    </div>
-
-    <div class="card">
-      <div class="card-title">✏️ 오늘의 키워드</div>
-      <div class="cat-grid">
+      <div class="cat-grid" style="margin-top:8px;">
         <div class="field"><label class="label">💬 언어/말하기</label><input type="text" id="cat1" placeholder="예: 다람쥐 찾기"></div>
         <div class="field"><label class="label">🎮 활동과 놀이</label><input type="text" id="cat2" placeholder="예: 모종심기"></div>
         <div class="field"><label class="label">🍱 식사</label><input type="text" id="cat3" placeholder="예: 잘 먹음, 당근 조금 남김"></div>
@@ -178,16 +165,19 @@ input::placeholder,textarea::placeholder{color:#888780;font-family:'Gaegu',cursi
         <div class="field"><label class="label">💊 건강/약복용</label><input type="text" id="cat5" placeholder="예: 감기약 알약 잘 복용"></div>
         <div class="field"><label class="label">⭐ 특징적인 일</label><input type="text" id="cat6" placeholder="예: 넘어져서 손등 살짝 까짐"></div>
       </div>
+      <div class="common-notice" id="commonPreview" style="margin-top:8px;">공통 정보 탭에서 입력한 내용이 여기 표시돼요!</div>
+      <div class="field" style="margin-top:8px;"><label class="label">오늘 추가 준비물</label><input type="text" id="extraPrep" placeholder="예: 수영복, 물총"></div>
     </div>
 
     <div class="card">
-      <div class="card-title">📌 준비물 &amp; 공지</div>
-      <div class="common-notice" id="commonPreview">공통 정보 탭에서 입력한 내용이 여기 표시돼요!</div>
-      <div class="field"><label class="label">오늘 추가 준비물</label><input type="text" id="extraPrep" placeholder="예: 수영복, 물총"></div>
+      <div class="card-title">👶 아이 선택 후 바로 생성!</div>
+      <div style="font-size:14px;font-weight:700;color:#888780;margin-bottom:10px;">아이 버튼 클릭하면 바로 알림장이 생성돼요 🌿</div>
+      <div class="kids-row" id="kidsBtns"></div>
     </div>
 
-    <div class="gen-btn-row">
-      <button class="gen-btn gen-main" onclick="generateAlarm()">🌿 알림장 자동 생성하기</button>
+    <div class="card" id="kidInfoCard" style="display:none;">
+      <div class="card-title">📋 선택된 아이</div>
+      <div class="kid-info-preview" id="kidInfoPreview"></div>
     </div>
 
     <div class="loading-box" id="loadingBox">✨ 알림장 작성 중이에요... 잠깐만요! 🥰</div>
@@ -330,6 +320,8 @@ function selectKid(id) {
   if (k.health) info += '\n💊 건강: ' + k.health;
   if (k.memo) info += '\n✏️ 메모: ' + k.memo;
   document.getElementById('kidInfoPreview').textContent = info;
+  // 아이 선택하면 바로 알림장 생성!
+  generateAlarm();
 }
 
 function setMode(m) {
