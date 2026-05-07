@@ -165,8 +165,6 @@ input::placeholder,textarea::placeholder{color:#888780;font-family:'Gaegu',cursi
         <div class="field"><label class="label">💊 건강/약복용</label><input type="text" id="cat5" placeholder="예: 감기약 알약 잘 복용"></div>
         <div class="field"><label class="label">⭐ 특징적인 일</label><input type="text" id="cat6" placeholder="예: 넘어져서 손등 살짝 까짐"></div>
       </div>
-      <div class="common-notice" id="commonPreview" style="margin-top:8px;">공통 정보 탭에서 입력한 내용이 여기 표시돼요!</div>
-      <div class="field" style="margin-top:8px;"><label class="label">오늘 추가 준비물</label><input type="text" id="extraPrep" placeholder="예: 수영복, 물총"></div>
     </div>
 
     <div class="card">
@@ -271,7 +269,7 @@ function updateCommonPreview() {
   let txt = '';
   if (prep) txt += '📦 준비물: ' + prep + '\n';
   if (notice) txt += '📢 공지: ' + notice;
-  document.getElementById('commonPreview').textContent = txt || '공통 정보 탭에서 입력한 내용이 여기 표시돼요!';
+  // commonPreview removed
 }
 
 function renderKidBtns() {
@@ -445,7 +443,6 @@ async function generateAlarm() {
 
   const commonPrep = document.getElementById('commonPrep').value;
   const commonNotice = document.getElementById('commonNotice').value;
-  const extraPrep = document.getElementById('extraPrep').value;
   const className = document.getElementById('className').value || '우리반';
 
   const prompt = `아래 정보로 어린이집 알림장을 써줘.
@@ -461,7 +458,6 @@ ${kw.join('\n') || '없음'}
 
 [준비물]
 공통: ${commonPrep || '없음'}
-추가: ${extraPrep || '없음'}
 
 [공지사항]
 ${commonNotice || '없음'}
@@ -490,8 +486,12 @@ ${className}
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ prompt, maxTokens: 1200 })
     });
-    const data = await res.json();
+    if (!res.ok) throw new Error('서버 오류 (' + res.status + ') - Vercel 환경변수에 API 키가 설정되어 있는지 확인해주세요!');
+    const text = await res.text();
+    let data;
+    try { data = JSON.parse(text); } catch(e) { throw new Error('서버 응답 오류: ' + text.substring(0, 80)); }
     if (data.error) throw new Error(data.error);
+    if (!data.text) throw new Error('응답이 비어있어요');
     rb.textContent = data.text || '생성 실패 😢';
     rb.style.display = 'block';
     cbr.style.display = 'flex';
