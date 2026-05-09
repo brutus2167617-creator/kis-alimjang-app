@@ -191,7 +191,7 @@ input::placeholder,textarea::placeholder{color:#888780;font-family:'Gaegu',cursi
         <button class="gen-btn gen-copy" onclick="copyResult('resultBox', this)">📋 전체 복사</button>
       </div>
 
-      <div style="font-size:16px;font-weight:700;color:#0C447C;margin:18px 0 6px;">✂️ 300자 요약본</div>
+      <div style="font-size:16px;font-weight:700;color:#0C447C;margin:18px 0 6px;">✂️ 400자 요약본</div>
       <div class="result-box" id="shortBox" style="display:block;border-color:#85B7EB;background:#F0F6FD;"></div>
       <div style="font-size:13px;font-weight:700;color:#5F5E5A;margin:5px 0 6px;" id="charCount"></div>
       <div class="gen-btn-row" style="margin-top:4px;">
@@ -570,7 +570,7 @@ ${className}
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
-        prompt: `아래 알림장을 300자 이내로 자연스럽게 요약해줘. 핵심 내용(활동, 아이 상태, 준비물/공지)을 포함하고 말투는 그대로 유지해줘. 300자를 절대 넘지 말 것.\n\n${fullText}`,
+        prompt: `아래 알림장을 400자 이내로 자연스럽게 요약해줘. 핵심 내용(활동, 아이 상태, 준비물/공지)을 포함하고 말투는 그대로 유지해줘. 400자를 절대 넘지 말 것.\n\n${fullText}`,
         maxTokens: 500
       })
     });
